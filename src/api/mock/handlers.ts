@@ -15,9 +15,9 @@ async function latency() {
 function parseSeverity(param: string | null): Severity[] | undefined {
   if (!param) return undefined;
   const allowed: Severity[] = ["alert", "mild", "drowsy", "critical"];
-  const parsed = param.split(",").filter((s): s is Severity =>
-    allowed.includes(s as Severity),
-  );
+  const parsed = param
+    .split(",")
+    .filter((s): s is Severity => allowed.includes(s as Severity));
   return parsed.length ? parsed : undefined;
 }
 
@@ -89,9 +89,7 @@ export const handlers: RequestHandler[] = [
       driverId: p.get("driverId") ?? undefined,
       vehicleId: p.get("vehicleId") ?? undefined,
       acknowledged:
-        p.get("acknowledged") === null
-          ? undefined
-          : p.get("acknowledged") === "true",
+        p.get("acknowledged") === null ? undefined : p.get("acknowledged") === "true",
       from: p.get("from") ?? undefined,
       to: p.get("to") ?? undefined,
       sort: (p.get("sort") as "timestamp" | "score" | "severity" | null) ?? undefined,
@@ -116,6 +114,16 @@ export const handlers: RequestHandler[] = [
     return event
       ? HttpResponse.json(event)
       : HttpResponse.json({ message: "Alerta não encontrado" }, { status: 404 });
+  }),
+
+  // ─── Trips (só existem na API real; no mock a lista é vazia) ───────────────
+  http.get(`${API}/trips`, async () => {
+    await latency();
+    return HttpResponse.json([]);
+  }),
+  http.get(`${API}/trips/:id`, async () => {
+    await latency();
+    return HttpResponse.json({ message: "Viagem não encontrada" }, { status: 404 });
   }),
 
   // ─── ML ────────────────────────────────────────────────────────────────────

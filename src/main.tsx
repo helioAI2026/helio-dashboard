@@ -9,6 +9,7 @@ import { queryClient } from "@/api/query-client";
 import { ThemeProvider } from "@/lib/theme";
 import { AuthProvider } from "@/features/auth/auth-context";
 import { Toaster } from "@/components/ui/sonner";
+import { env } from "@/config/env";
 
 async function enableMocking() {
   const { worker } = await import("@/api/mock/browser");
@@ -19,8 +20,10 @@ async function enableMocking() {
 }
 
 enableMocking().then(async () => {
-  const { startLiveSimulation } = await import("@/api/mock/live");
-  startLiveSimulation(queryClient);
+  if (env.apiMode === "mock") {
+    const { startLiveSimulation } = await import("@/api/mock/live");
+    startLiveSimulation(queryClient);
+  }
 
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

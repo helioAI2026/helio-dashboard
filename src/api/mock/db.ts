@@ -167,10 +167,7 @@ export function getEvent(id: string): DrowsinessEvent | undefined {
   return state.events.find((e) => e.id === id);
 }
 
-export function acknowledgeEvent(
-  id: string,
-  by: string,
-): DrowsinessEvent | undefined {
+export function acknowledgeEvent(id: string, by: string): DrowsinessEvent | undefined {
   const event = getEvent(id);
   if (!event) return undefined;
   event.acknowledgedAt = new Date().toISOString();
@@ -229,9 +226,7 @@ export function getFleetStats(): FleetStats {
       (v) => v.currentSeverity === "drowsy" || v.currentSeverity === "critical",
     ).length,
     devicesOffline: devices.filter((d) => d.connectivity === "offline").length,
-    eventsToday: events.filter(
-      (e) => new Date(e.timestamp) >= startOfToday,
-    ).length,
+    eventsToday: events.filter((e) => new Date(e.timestamp) >= startOfToday).length,
     avgFleetScore: Math.round(
       mean(vehicles.filter((v) => v.status !== "offline").map((v) => v.currentScore)),
     ),
@@ -248,9 +243,7 @@ export function insertEvent(event: DrowsinessEvent) {
 
 export function pushScoreHistoryPoint() {
   const avg = mean(
-    state.vehicles
-      .filter((v) => v.status !== "offline")
-      .map((v) => v.currentScore),
+    state.vehicles.filter((v) => v.status !== "offline").map((v) => v.currentScore),
   );
   state.scoreHistory = [
     ...state.scoreHistory.slice(-95),

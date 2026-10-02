@@ -104,8 +104,7 @@ export function buildSeedData(): SeedData {
     const hub = pick(FREIGHT_HUBS, rand);
 
     const statusRoll = rand();
-    const status =
-      statusRoll < 0.12 ? "offline" : statusRoll < 0.3 ? "idle" : "online";
+    const status = statusRoll < 0.12 ? "offline" : statusRoll < 0.3 ? "idle" : "online";
 
     // Score distribution: most drivers alert, a tail of elevated fatigue.
     const scoreRoll = rand();
@@ -217,10 +216,7 @@ export function buildSeedData(): SeedData {
   };
 }
 
-function buildEvents(
-  rand: () => number,
-  vehicles: Vehicle[],
-): DrowsinessEvent[] {
+function buildEvents(rand: () => number, vehicles: Vehicle[]): DrowsinessEvent[] {
   const events: DrowsinessEvent[] = [];
 
   for (let i = 0; i < EVENT_COUNT; i++) {
@@ -229,9 +225,7 @@ function buildEvents(
     const score = Math.round(45 + rand() * 55);
     const severity = severityForScore(score);
     const triggerCount = 1 + Math.floor(rand() * 3);
-    const triggers = faker.helpers
-      .shuffle([...ALL_TRIGGERS])
-      .slice(0, triggerCount);
+    const triggers = faker.helpers.shuffle([...ALL_TRIGGERS]).slice(0, triggerCount);
     const acknowledged = ageDays > 0.4 && rand() < 0.8;
     const id = `evt_${String(EVENT_COUNT - i).padStart(4, "0")}`;
 

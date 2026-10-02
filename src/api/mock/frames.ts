@@ -69,9 +69,7 @@ export function landmarksSvg(id: string): string {
       return pt(ex + Math.cos(a) * 14, cy - 14 + Math.sin(a) * 7);
     }).join("");
 
-  const nose = Array.from({ length: 4 }, (_, i) =>
-    pt(cx, cy - 8 + i * 9),
-  ).join("");
+  const nose = Array.from({ length: 4 }, (_, i) => pt(cx, cy - 8 + i * 9)).join("");
 
   const mouth = Array.from({ length: 8 }, (_, i) => {
     const a = Math.PI * (i / 7);
