@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import type { Severity } from "@/api/types";
 import type { EventFilters } from "@/api/queries";
 import { SEVERITY_ORDER } from "@/lib/severity";
+import { env, type ApiMode } from "@/config/env";
 
 export type AlertPeriod = "24h" | "7d" | "30d" | "all";
 
@@ -23,23 +24,35 @@ export type AlertFiltersState = {
 
 const PAGE_SIZE = 15;
 
-function periodStart(period: AlertPeriod): string | undefined {
-  if (period === "all") return undefined;
+const DAY_MS = 86_400_000;
+/** A API real aceita no máximo 31 dias por consulta. */
+const REAL_API_MAX_DAYS = 30;
+
+export function periodStart(
+  period: AlertPeriod,
+  mode: ApiMode = env.apiMode,
+  now: number = Date.now(),
+): string | undefined {
+  if (period === "all") {
+    return mode === "hybrid"
+      ? new Date(now - REAL_API_MAX_DAYS * DAY_MS).toISOString()
+      : undefined;
+  }
   const days = period === "24h" ? 1 : period === "7d" ? 7 : 30;
-  return new Date(Date.now() - days * 86_400_000).toISOString();
+  return new Date(now - days * DAY_MS).toISOString();
 }
 
 export function useAlertFilters() {
   const [params, setParams] = useSearchParams();
 
   const state = useMemo<AlertFiltersState>(() => {
-    const severity = (params.get("sev")?.split(",") ?? [])
-      .filter((s): s is Severity => SEVERITY_ORDER.includes(s as Severity));
+    const severity = (params.get("sev")?.split(",") ?? []).filter((s): s is Severity =>
+      SEVERITY_ORDER.includes(s as Severity),
+    );
     const ackParam = params.get("ack");
     return {
       severity,
-      acknowledged:
-        ackParam === "open" || ackParam === "done" ? ackParam : "all",
+      acknowledged: ackParam === "open" || ackParam === "done" ? ackParam : "all",
       period: (params.get("periodo") as AlertPeriod) ?? "7d",
       page: Math.max(1, Number(params.get("pagina")) || 1),
     };
@@ -80,18 +93,14 @@ export function useAlertFilters() {
       pageSize: PAGE_SIZE,
       severity: state.severity.length ? state.severity : undefined,
       acknowledged:
-        state.acknowledged === "all"
-          ? undefined
-          : state.acknowledged === "done",
+        state.acknowledged === "all" ? undefined : state.acknowledged === "done",
       from: periodStart(state.period),
     }),
     [state],
   );
 
   const hasActiveFilters =
-    state.severity.length > 0 ||
-    state.acknowledged !== "all" ||
-    state.period !== "7d";
+    state.severity.length > 0 || state.acknowledged !== "all" || state.period !== "7d";
 
   const reset = useCallback(
     () => update({ severity: [], acknowledged: "all", period: "7d" }),

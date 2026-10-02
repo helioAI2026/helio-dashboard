@@ -51,6 +51,8 @@ export type Driver = {
   licenseNo: string;
   phone: string;
   assignedVehicleId: string | null;
+  /** Só na API real: dispositivo do Helio vinculado ao motorista. */
+  assignedDeviceId?: string | null;
   currentScore: number;
   currentSeverity: Severity;
   onShift: boolean;
@@ -76,26 +78,29 @@ export type Device = {
 };
 
 export type EventTrigger =
-  | "eye-closure"
-  | "yawn"
-  | "head-nod"
-  | "perclos"
-  | "gaze-off-road";
+  "eye-closure" | "yawn" | "head-nod" | "perclos" | "gaze-off-road";
 
 export type DrowsinessEvent = {
   id: string;
-  vehicleId: string;
-  driverId: string;
+  /** Nulo em eventos reais quando o motorista não tem veículo vinculado. */
+  vehicleId: string | null;
+  /** Nulo em eventos reais quando o dispositivo não está vinculado a um motorista. */
+  driverId: string | null;
+  /** Só na API real: viagem e dispositivo de origem. */
+  tripId?: string;
+  deviceId?: string;
   timestamp: string;
   score: number;
   severity: Severity;
   durationSec: number;
   triggers: EventTrigger[];
-  location: Coordinates;
+  /** O edge ainda não envia GPS. */
+  location: Coordinates | null;
+  /** O edge ainda não envia imagens. */
   frames: {
     ir: string;
     landmarks: string;
-  };
+  } | null;
   acknowledgedAt: string | null;
   acknowledgedBy: string | null;
 };
@@ -122,13 +127,7 @@ export type ModelVersion = {
 };
 
 export type TrainingJobStatus =
-  | "collecting"
-  | "queued"
-  | "training"
-  | "evaluating"
-  | "ready"
-  | "failed"
-  | "deployed";
+  "collecting" | "queued" | "training" | "evaluating" | "ready" | "failed" | "deployed";
 
 export type TrainingJob = {
   id: string;

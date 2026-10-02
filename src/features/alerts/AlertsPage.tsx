@@ -22,17 +22,12 @@ import {
 import { cn } from "@/lib/utils";
 import { formatPlate, formatRelative } from "@/lib/format";
 import { TRIGGER_LABEL } from "@/lib/status";
-import {
-  SEVERITY_CSS_VAR,
-  SEVERITY_LABEL_SHORT,
-  SEVERITY_ORDER,
-} from "@/lib/severity";
+import { SEVERITY_CSS_VAR, SEVERITY_LABEL_SHORT, SEVERITY_ORDER } from "@/lib/severity";
 import { AlertDetailDrawer } from "./AlertDetailDrawer";
 import { PERIOD_LABEL, useAlertFilters, type AlertPeriod } from "./useAlertFilters";
 
 export function AlertsPage() {
-  const { state, update, reset, query, hasActiveFilters, pageSize } =
-    useAlertFilters();
+  const { state, update, reset, query, hasActiveFilters, pageSize } = useAlertFilters();
   const navigate = useNavigate();
   const { alertId } = useParams();
 
@@ -55,20 +50,19 @@ export function AlertsPage() {
         header: "Nível",
         accessorKey: "severity",
         cell: ({ row }) => (
-          <SeverityPill
-            severity={row.original.severity}
-            score={row.original.score}
-          />
+          <SeverityPill severity={row.original.severity} score={row.original.score} />
         ),
       },
       {
         header: "Veículo",
         cell: ({ row }) => {
-          const v = vehicleById.get(row.original.vehicleId);
+          const v = row.original.vehicleId
+            ? vehicleById.get(row.original.vehicleId)
+            : undefined;
           return (
             <div>
               <p className="font-data font-medium">
-                {v ? formatPlate(v.plate) : row.original.vehicleId}
+                {v ? formatPlate(v.plate) : (row.original.vehicleId ?? "—")}
               </p>
               <p className="text-xs text-muted-foreground">
                 {v ? `${v.make} ${v.model}` : ""}
@@ -80,7 +74,9 @@ export function AlertsPage() {
       {
         header: "Motorista",
         cell: ({ row }) =>
-          driverById.get(row.original.driverId)?.name ?? "—",
+          (row.original.driverId
+            ? driverById.get(row.original.driverId)?.name
+            : undefined) ?? "—",
       },
       {
         header: "Gatilhos",
@@ -169,9 +165,7 @@ export function AlertsPage() {
 
         <Select
           value={state.acknowledged}
-          onValueChange={(v) =>
-            update({ acknowledged: v as typeof state.acknowledged })
-          }
+          onValueChange={(v) => update({ acknowledged: v as typeof state.acknowledged })}
         >
           <SelectTrigger className="h-9 w-[170px]">
             <SelectValue />
@@ -237,10 +231,7 @@ export function AlertsPage() {
         />
       )}
 
-      <AlertDetailDrawer
-        eventId={alertId ?? null}
-        onClose={() => navigate("/alertas")}
-      />
+      <AlertDetailDrawer eventId={alertId ?? null} onClose={() => navigate("/alertas")} />
     </>
   );
 }

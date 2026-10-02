@@ -27,8 +27,8 @@ type AlertDetailDrawerProps = {
 
 export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) {
   const event = useEvent(eventId ?? undefined);
-  const vehicle = useVehicle(event.data?.vehicleId);
-  const driver = useDriver(event.data?.driverId);
+  const vehicle = useVehicle(event.data?.vehicleId ?? undefined);
+  const driver = useDriver(event.data?.driverId ?? undefined);
   const acknowledge = useAcknowledgeEvent();
 
   const [showLandmarks, setShowLandmarks] = useState(true);
@@ -63,9 +63,7 @@ export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) 
             )}
           </SheetTitle>
           <SheetDescription>
-            {event.data
-              ? formatDateTime(event.data.timestamp)
-              : "Carregando…"}
+            {event.data ? formatDateTime(event.data.timestamp) : "Carregando…"}
           </SheetDescription>
         </SheetHeader>
 
@@ -79,36 +77,47 @@ export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) 
           ) : (
             <>
               {/* IR frame + landmarks */}
-              <div className="relative overflow-hidden rounded-lg border border-border bg-black">
-                <img
-                  src={event.data.frames.ir}
-                  alt="Quadro em infravermelho no momento do alerta"
-                  className="w-full"
-                  width={320}
-                  height={240}
-                />
-                {showLandmarks && (
-                  <img
-                    src={event.data.frames.landmarks}
-                    alt="Marcos faciais detectados"
-                    className="pointer-events-none absolute inset-0 size-full"
-                  />
-                )}
-                <div className="absolute left-2 top-2">
-                  <SeverityPill
-                    severity={event.data.severity}
-                    score={event.data.score}
-                  />
+              {event.data.frames ? (
+                <>
+                  <div className="relative overflow-hidden rounded-lg border border-border bg-black">
+                    <img
+                      src={event.data.frames.ir}
+                      alt="Quadro em infravermelho no momento do alerta"
+                      className="w-full"
+                      width={320}
+                      height={240}
+                    />
+                    {showLandmarks && (
+                      <img
+                        src={event.data.frames.landmarks}
+                        alt="Marcos faciais detectados"
+                        className="pointer-events-none absolute inset-0 size-full"
+                      />
+                    )}
+                    <div className="absolute left-2 top-2">
+                      <SeverityPill
+                        severity={event.data.severity}
+                        score={event.data.score}
+                      />
+                    </div>
+                  </div>
+                  <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Switch checked={showLandmarks} onCheckedChange={setShowLandmarks} />
+                    <ScanFace className="size-3.5" />
+                    Sobrepor marcos faciais
+                  </label>
+                </>
+              ) : (
+                <div className="relative grid aspect-[4/3] place-items-center rounded-lg border border-dashed border-border text-xs text-muted-foreground">
+                  Sem imagem para este alerta
+                  <div className="absolute left-2 top-2">
+                    <SeverityPill
+                      severity={event.data.severity}
+                      score={event.data.score}
+                    />
+                  </div>
                 </div>
-              </div>
-              <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <Switch
-                  checked={showLandmarks}
-                  onCheckedChange={setShowLandmarks}
-                />
-                <ScanFace className="size-3.5" />
-                Sobrepor marcos faciais
-              </label>
+              )}
 
               {/* Score + vehicle */}
               <div className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-card p-3">
@@ -117,16 +126,12 @@ export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) 
                   <p className="font-data font-medium">
                     {vehicle.data
                       ? formatPlate(vehicle.data.plate)
-                      : event.data.vehicleId}
+                      : (event.data.vehicleId ?? "—")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {vehicle.data
-                      ? `${vehicle.data.make} ${vehicle.data.model}`
-                      : ""}
+                    {vehicle.data ? `${vehicle.data.make} ${vehicle.data.model}` : ""}
                   </p>
-                  <p className="mt-1 text-xs">
-                    {driver.data?.name ?? "—"}
-                  </p>
+                  <p className="mt-1 text-xs">{driver.data?.name ?? "—"}</p>
                 </div>
               </div>
 
@@ -135,10 +140,7 @@ export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) 
                 <p className="kicker mb-2">Gatilhos detectados</p>
                 <ul className="space-y-1.5">
                   {event.data.triggers.map((t) => (
-                    <li
-                      key={t}
-                      className="flex items-center gap-2 text-sm"
-                    >
+                    <li key={t} className="flex items-center gap-2 text-sm">
                       <span className="size-1.5 rounded-full bg-severity-drowsy" />
                       {TRIGGER_LABEL[t] ?? t}
                     </li>
@@ -152,19 +154,16 @@ export function AlertDetailDrawer({ eventId, onClose }: AlertDetailDrawerProps) 
                   <dt className="flex items-center gap-1.5 text-muted-foreground">
                     <Clock className="size-3.5" /> Duração
                   </dt>
-                  <dd className="font-data">
-                    {formatDuration(event.data.durationSec)}
-                  </dd>
+                  <dd className="font-data">{formatDuration(event.data.durationSec)}</dd>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <dt className="flex items-center gap-1.5 text-muted-foreground">
                     <MapPin className="size-3.5" /> Local
                   </dt>
                   <dd className="font-data text-xs">
-                    {formatCoords(
-                      event.data.location.lat,
-                      event.data.location.lng,
-                    )}
+                    {event.data.location
+                      ? formatCoords(event.data.location.lat, event.data.location.lng)
+                      : "—"}
                   </dd>
                 </div>
               </dl>
