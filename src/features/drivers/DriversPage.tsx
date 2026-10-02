@@ -56,9 +56,7 @@ export function DriversPage() {
         cell: ({ row }) =>
           row.original.assignedVehicleId ? (
             <span className="font-data">
-              {formatPlate(
-                plateByVehicle.get(row.original.assignedVehicleId) ?? "—",
-              )}
+              {formatPlate(plateByVehicle.get(row.original.assignedVehicleId) ?? "—")}
             </span>
           ) : (
             <span className="text-muted-foreground">Sem veículo</span>
@@ -100,9 +98,7 @@ export function DriversPage() {
         accessorFn: (d) => d.stats.avgScore7d,
         id: "avgScore7d",
         cell: ({ row }) => (
-          <span className="font-data tabular-nums">
-            {row.original.stats.avgScore7d}
-          </span>
+          <span className="font-data tabular-nums">{row.original.stats.avgScore7d}</span>
         ),
       },
       {
@@ -134,9 +130,7 @@ export function DriversPage() {
           className="max-w-xs"
         />
         <span className="text-sm text-muted-foreground">
-          <span className="font-data tabular-nums text-foreground">
-            {rows.length}
-          </span>{" "}
+          <span className="font-data tabular-nums text-foreground">{rows.length}</span>{" "}
           {rows.length === 1 ? "motorista" : "motoristas"}
         </span>
       </div>

@@ -16,6 +16,8 @@ import type {
   Severity,
   TrainingJob,
   Vehicle,
+  Trip,
+  TripDetail,
 } from "@/api/types";
 import { apiGet, apiPost, apiPut } from "@/api/client";
 
@@ -32,6 +34,12 @@ export type EventFilters = {
   dir?: "asc" | "desc";
 };
 
+export type TripFilters = {
+  driverId?: string;
+  from?: string;
+  to?: string;
+};
+
 export const queryKeys = {
   fleetStats: ["fleet", "stats"] as const,
   vehicles: ["vehicles"] as const,
@@ -42,6 +50,8 @@ export const queryKeys = {
   device: (id: string) => ["devices", id] as const,
   events: (filters: EventFilters) => ["events", filters] as const,
   event: (id: string) => ["events", "detail", id] as const,
+  trips: (filters: TripFilters) => ["trips", filters] as const,
+  trip: (id: string) => ["trips", "detail", id] as const,
   models: ["models"] as const,
   model: (id: string) => ["models", id] as const,
   trainingJobs: ["training-jobs"] as const,
@@ -109,8 +119,7 @@ export function useDriver(id: string | undefined) {
 export function useDriverHistory(id: string | undefined) {
   return useQuery({
     queryKey: [...queryKeys.driver(id ?? ""), "history"] as const,
-    queryFn: () =>
-      apiGet<{ t: string; score: number }[]>(`/api/drivers/${id}/history`),
+    queryFn: () => apiGet<{ t: string; score: number }[]>(`/api/drivers/${id}/history`),
     enabled: Boolean(id),
   });
 }
@@ -134,9 +143,7 @@ export function useEvents(filters: EventFilters) {
   return useQuery({
     queryKey: queryKeys.events(filters),
     queryFn: () =>
-      apiGet<Paginated<DrowsinessEvent>>(
-        `/api/events${eventsQueryString(filters)}`,
-      ),
+      apiGet<Paginated<DrowsinessEvent>>(`/api/events${eventsQueryString(filters)}`),
     placeholderData: keepPreviousData,
   });
 }
@@ -145,6 +152,27 @@ export function useEvent(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.event(id ?? ""),
     queryFn: () => apiGet<DrowsinessEvent>(`/api/events/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useTrips(filters: TripFilters) {
+  const p = new URLSearchParams();
+  if (filters.driverId) p.set("driverId", filters.driverId);
+  if (filters.from) p.set("from", filters.from);
+  if (filters.to) p.set("to", filters.to);
+  const qs = p.toString();
+  return useQuery({
+    queryKey: queryKeys.trips(filters),
+    queryFn: () => apiGet<Trip[]>(`/api/trips${qs ? `?${qs}` : ""}`),
+    enabled: Boolean(filters.driverId),
+  });
+}
+
+export function useTrip(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.trip(id ?? ""),
+    queryFn: () => apiGet<TripDetail>(`/api/trips/${id}`),
     enabled: Boolean(id),
   });
 }

@@ -169,3 +169,15 @@ export type Paginated<T> = {
   page: number;
   pageSize: number;
 };
+
+export type Trip = {
+  id: string;
+  deviceId: string;
+  driverId: string | null;
+  startedAt: string;
+  lastEventAt: string;
+  maxScore: number;
+  alertCount: number;
+};
+
+export type TripDetail = Trip & { events: DrowsinessEvent[] };

@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Phone, Truck } from "lucide-react";
 import {
   useDriver,
   useDriverHistory,
+  useTrips,
   useEvents,
   useVehicle,
 } from "@/api/queries";
@@ -16,7 +17,12 @@ import { SeverityPill } from "@/components/common/SeverityPill";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { StatCard } from "@/components/common/StatCard";
 import { ScoreTimeSeries } from "@/components/charts/ScoreTimeSeries";
-import { formatDateTime, formatPlate, formatRelative } from "@/lib/format";
+import {
+  formatDateTime,
+  formatDuration,
+  formatPlate,
+  formatRelative,
+} from "@/lib/format";
 import { TRIGGER_LABEL } from "@/lib/status";
 
 export function DriverDetailPage() {
@@ -25,6 +31,7 @@ export function DriverDetailPage() {
   const history = useDriverHistory(driverId);
   const vehicle = useVehicle(driver.data?.assignedVehicleId ?? undefined);
   const events = useEvents({ driverId, pageSize: 12 });
+  const trips = useTrips({ driverId });
 
   if (driver.isLoading) {
     return (
@@ -106,9 +113,7 @@ export function DriverDetailPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-sm">
-              Pontuação média diária — 21 dias
-            </CardTitle>
+            <CardTitle className="text-sm">Pontuação média diária — 21 dias</CardTitle>
           </CardHeader>
           <CardContent>
             {history.isLoading || !history.data ? (
@@ -147,6 +152,41 @@ export function DriverDetailPage() {
 
       <Card className="mt-4">
         <CardHeader>
+          <CardTitle className="text-sm">Viagens recentes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {trips.isLoading ? (
+            <Skeleton className="h-16 w-full" />
+          ) : trips.data && trips.data.length > 0 ? (
+            <ul className="divide-y divide-border/60">
+              {trips.data.map((trip) => (
+                <li key={trip.id} className="flex items-center gap-3 py-2.5 text-xs">
+                  <span className="flex items-center gap-1 font-data text-muted-foreground">
+                    <Clock className="size-3" />
+                    {formatDateTime(trip.startedAt)}
+                  </span>
+                  <span className="flex-1 text-muted-foreground">
+                    {formatDuration(
+                      (Date.parse(trip.lastEventAt) - Date.parse(trip.startedAt)) / 1000,
+                    )}
+                  </span>
+                  <span>
+                    {trip.alertCount} {trip.alertCount === 1 ? "alerta" : "alertas"}
+                  </span>
+                  <span className="font-data">pico {trip.maxScore}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Nenhuma viagem nos últimos 7 dias.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader>
           <CardTitle className="text-sm">Alertas recentes</CardTitle>
         </CardHeader>
         <CardContent>
@@ -166,9 +206,7 @@ export function DriverDetailPage() {
                       showDot={false}
                     />
                     <span className="flex-1 truncate text-xs text-muted-foreground">
-                      {event.triggers
-                        .map((t) => TRIGGER_LABEL[t] ?? t)
-                        .join(" · ")}
+                      {event.triggers.map((t) => TRIGGER_LABEL[t] ?? t).join(" · ")}
                     </span>
                     <span className="flex items-center gap-1 font-data text-xs text-muted-foreground">
                       <Clock className="size-3" />
