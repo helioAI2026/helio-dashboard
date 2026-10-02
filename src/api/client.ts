@@ -4,6 +4,8 @@
  * backend (same paths) replaces the mock later. This is the seam.
  */
 
+import { getIdToken, notifyUnauthorized } from "@/features/auth/session";
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -23,10 +25,16 @@ function resolve(path: string): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = await getIdToken();
   const response = await fetch(resolve(path), {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
+
+  if (response.status === 401 && token) notifyUnauthorized();
 
   if (!response.ok) {
     let message = `Erro ${response.status}`;
