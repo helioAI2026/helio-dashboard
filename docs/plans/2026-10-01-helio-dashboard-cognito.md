@@ -950,11 +950,16 @@ describe("AuthProvider (híbrido)", () => {
     mockCognito(() => cognitoError("NotAuthorizedException"));
     const { result } = renderAuth();
 
-    await expect(
-      act(async () => {
+    let error: unknown;
+    await act(async () => {
+      try {
         await result.current.signIn("ana@helio.dev", "errada");
-      }),
-    ).rejects.toThrow("E-mail ou senha incorretos.");
+      } catch (err) {
+        error = err;
+      }
+    });
+
+    expect((error as Error).message).toBe("E-mail ou senha incorretos.");
     expect(result.current.user).toBeNull();
   });
 
