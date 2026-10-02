@@ -13,16 +13,16 @@ Toda a interface é em **português (pt-BR)**.
 
 ## Stack
 
-| Camada | Tecnologia |
-| --- | --- |
-| Build | Vite 6 + React 19 + TypeScript (strict) |
-| Rotas | React Router v7 (data router) |
-| Estado de servidor | TanStack Query v5 |
-| API simulada | MSW v2 + `@faker-js/faker` (dados semente determinísticos) |
-| UI | Tailwind CSS v4 + componentes shadcn/ui (Radix) |
-| Mapa | MapLibre GL + `react-map-gl` sobre basemap escuro da CARTO (sem chave de API) |
-| Gráficos | Recharts (séries) + SVG próprio (sparklines, medidor) |
-| Testes | Vitest + Testing Library |
+| Camada             | Tecnologia                                                                    |
+| ------------------ | ----------------------------------------------------------------------------- |
+| Build              | Vite 6 + React 19 + TypeScript (strict)                                       |
+| Rotas              | React Router v7 (data router)                                                 |
+| Estado de servidor | TanStack Query v5                                                             |
+| API simulada       | MSW v2 + `@faker-js/faker` (dados semente determinísticos)                    |
+| UI                 | Tailwind CSS v4 + componentes shadcn/ui (Radix)                               |
+| Mapa               | MapLibre GL + `react-map-gl` sobre basemap escuro da CARTO (sem chave de API) |
+| Gráficos           | Recharts (séries) + SVG próprio (sparklines, medidor)                         |
+| Testes             | Vitest + Testing Library                                                      |
 
 ## Como rodar
 
@@ -35,14 +35,14 @@ Faça login com **qualquer e-mail e senha** (autenticação é simulada). A apli
 dados simulados e uma **simulação ao vivo**: a cada 4 s os caminhões se movem, as
 pontuações de fadiga oscilam, novos alertas surgem e os treinamentos do Greengrass avançam.
 
-| Script | Ação |
-| --- | --- |
-| `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção (`tsc -b && vite build`) |
-| `npm run preview` | Servir o build |
-| `npm run test` | Testes (Vitest) |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier |
+| Script            | Ação                                       |
+| ----------------- | ------------------------------------------ |
+| `npm run dev`     | Servidor de desenvolvimento                |
+| `npm run build`   | Build de produção (`tsc -b && vite build`) |
+| `npm run preview` | Servir o build                             |
+| `npm run test`    | Testes (Vitest)                            |
+| `npm run lint`    | ESLint                                     |
+| `npm run format`  | Prettier                                   |
 
 ## Telas
 
@@ -94,3 +94,39 @@ A única chamada externa da aplicação é o basemap do mapa
 (`basemaps.cartocdn.com`, gratuito, com atribuição). Todo o resto é empacotado. Para uso
 sem internet, aponte `BASEMAP_STYLE` em `src/components/map/FleetMap.tsx` para tiles
 próprios.
+
+## Modo híbrido (Cognito + API real) e deploy
+
+O app tem dois modos, escolhidos por `VITE_API_MODE`:
+
+| Modo            | Login                 | Dados                                                                                                          |
+| --------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `mock` (padrão) | qualquer e-mail/senha | tudo do MSW                                                                                                    |
+| `hybrid`        | Cognito               | motoristas, alertas, limiares e viagens da API real; veículos, dispositivos, MLOps e visão geral seguem no MSW |
+
+A infraestrutura fica no repositório `helio-infra` (stack CloudFormation `helio`).
+
+### Publicar
+
+```bash
+scripts/deploy.sh          # STACK_NAME e AWS_REGION opcionais
+```
+
+Gera `.env.production.local` a partir dos outputs da stack, faz o build, envia para o S3 e invalida o CloudFront.
+
+### Desenvolver contra a API real
+
+Crie `.env.development.local` (ignorado pelo git):
+
+```
+VITE_API_MODE=hybrid
+VITE_COGNITO_REGION=us-east-1
+VITE_COGNITO_CLIENT_ID=<UserPoolClientId da stack>
+VITE_API_PROXY_TARGET=<DashboardUrl da stack>
+```
+
+Com `npm run dev`, as rotas reais passam pelo proxy do Vite até o CloudFront.
+
+### Usuários
+
+São criados pelo administrador no Cognito, nos grupos `Administrador`, `GestorDeFrota` ou `Operador`. No primeiro acesso, a tela pede uma nova senha.
