@@ -312,7 +312,7 @@ export function fakeIdToken(claims: Record<string, unknown> = {}): string {
 
 export function cognitoAuthResult(
   claims: Record<string, unknown> = {},
-  refreshToken: string | undefined = "refresh-1",
+  refreshToken: string | null = "refresh-1",
 ) {
   return {
     AuthenticationResult: {
@@ -427,7 +427,7 @@ describe("cognito", () => {
   });
 
   it("renova os tokens mantendo o refresh token anterior", async () => {
-    const calls = mockCognito(() => HttpResponse.json(cognitoAuthResult({}, undefined)));
+    const calls = mockCognito(() => HttpResponse.json(cognitoAuthResult({}, null)));
 
     const tokens = await refreshTokens("refresh-antigo");
 
@@ -662,7 +662,7 @@ describe("session", () => {
   });
 
   it("renova o token expirado", async () => {
-    mockCognito(() => HttpResponse.json(cognitoAuthResult({}, undefined)));
+    mockCognito(() => HttpResponse.json(cognitoAuthResult({}, null)));
     saveTokens({ idToken: "id-velho", refreshToken: "refresh-x", expiresAt: Date.now() - 1 });
 
     const token = await getIdToken();
