@@ -4,7 +4,7 @@ import { act, renderHook } from "@testing-library/react";
 import { HttpResponse } from "msw";
 
 import { AuthProvider, roleFromGroups, useAuth } from "./auth-context";
-import { UNAUTHORIZED_EVENT, loadTokens, saveTokens } from "./session";
+import { UNAUTHORIZED_EVENT, getIdToken, loadTokens, saveTokens } from "./session";
 import type { ApiMode } from "@/config/env";
 import { cognitoError, mockCognito } from "@/test/cognito";
 import { cognitoAuthResult, fakeIdToken } from "@/test/tokens";
@@ -104,6 +104,19 @@ describe("AuthProvider (híbrido)", () => {
 
     act(() => {
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    });
+
+    expect(result.current.user).toBeNull();
+  });
+
+  it("volta ao login quando a renovação do token falha", async () => {
+    mockCognito(() => cognitoError("NotAuthorizedException"));
+    saveTokens({ idToken: fakeIdToken(), refreshToken: "revogado", expiresAt: Date.now() - 1 });
+    const { result } = renderAuth();
+    expect(result.current.user).not.toBeNull();
+
+    await act(async () => {
+      await getIdToken();
     });
 
     expect(result.current.user).toBeNull();

@@ -83,6 +83,23 @@ describe("LoginPage (híbrido)", () => {
     expect(calls).toHaveLength(1);
   });
 
+  it("sessão do desafio expirada volta para o login", async () => {
+    const user = userEvent.setup();
+    firstAccess(() => cognitoError("NotAuthorizedException"));
+    renderLogin();
+
+    await enterCredentials(user);
+    await user.type(await screen.findByLabelText("Nova senha"), "NovaSenha123");
+    await user.type(screen.getByLabelText("Confirme a nova senha"), "NovaSenha123");
+    await user.click(screen.getByRole("button", { name: "Salvar e entrar" }));
+
+    expect(
+      await screen.findByText("Sua sessão expirou. Entre novamente com a senha temporária."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Senha")).toHaveValue("");
+    expect(screen.queryByLabelText("Nova senha")).not.toBeInTheDocument();
+  });
+
   it("credenciais erradas mostram erro", async () => {
     const user = userEvent.setup();
     mockCognito(() => cognitoError("NotAuthorizedException"));
